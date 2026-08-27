@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Header, UploadFile, File, Form, Request
+from fastapi import FastAPI, APIRouter, HTTPException, Header, UploadFile, File, Form, Request, BackgroundTasks
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -379,7 +379,7 @@ def send_email(to: str, subject: str, html: str) -> bool:
         msg["From"] = f"BUGz X <{SENDER_EMAIL}>"
         msg["To"] = single_to
         msg.attach(MIMEText(html, "html", "utf-8"))
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=5) as server:
             server.starttls()
             server.login(SMTP_USER, SMTP_PASS)
             server.sendmail(SENDER_EMAIL, single_to, msg.as_string())
@@ -562,11 +562,35 @@ async def root():
     }
 
 
+async def dispatch_emails(submission: dict):
+    form_type = submission.get("form_type", "")
+    submission_id = submission.get("submission_id", "")
+    name = submission.get("name", "")
+    email = submission.get("email", "")
+    user_html = build_confirmation_email(submission)
+    admin_html = build_admin_notification_email(submission)
+    is_job = "job application" in form_type.lower()
+    user_subject = f"Your application has been received - {submission_id}" if is_job else f"Your inquiry has been received - {submission_id}"
+    user_ok = await asyncio.to_thread(
+        send_email, email,
+        user_subject,
+        user_html
+    )
+    admin_ok = await asyncio.to_thread(
+        send_email, NOTIFICATION_EMAIL,
+        f"New {form_type}: {name} - {submission_id}",
+        admin_html
+    )
+    if SUPABASE_READY:
+        await asyncio.to_thread(_sb_update_email_status, submission_id, user_ok)
+    logger.info("Email dispatch result user_ok=%s admin_ok=%s", user_ok, admin_ok)
+
 # ---- Universal Submit ----
 
 @api_router.post("/submit")
 async def universal_submit(
     request: Request,
+    background_tasks: BackgroundTasks,
     form_type: str = Form(...),
     name: str = Form(...),
     email: str = Form(...),
@@ -630,34 +654,14 @@ async def universal_submit(
     if SUPABASE_READY:
         await asyncio.to_thread(_sb_insert, submission)
 
-    # Send emails and return delivery status
-    async def dispatch_emails():
-        user_html = build_confirmation_email(submission)
-        admin_html = build_admin_notification_email(submission)
-        is_job = "job application" in form_type.lower()
-        user_subject = f"Your application has been received - {submission_id}" if is_job else f"Your inquiry has been received - {submission_id}"
-        user_ok = await asyncio.to_thread(
-            send_email, email,
-            user_subject,
-            user_html
-        )
-        admin_ok = await asyncio.to_thread(
-            send_email, NOTIFICATION_EMAIL,
-            f"New {form_type}: {name} - {submission_id}",
-            admin_html
-        )
-        if SUPABASE_READY:
-            await asyncio.to_thread(_sb_update_email_status, submission_id, user_ok)
-        logger.info("Email dispatch result user_ok=%s admin_ok=%s", user_ok, admin_ok)
-        return user_ok, admin_ok
-
-    user_ok, admin_ok = await dispatch_emails()
+    # Queue email dispatch as background task
+    background_tasks.add_task(dispatch_emails, submission)
 
     return {
         "ok": True,
         "submission_id": submission_id,
-        "email_sent": user_ok,
-        "admin_email_sent": admin_ok,
+        "email_sent": "pending",
+        "admin_email_sent": "pending",
         "message": f"Submission received. Your ID is {submission_id}. We'll respond within 24 hours.",
     }
 
