@@ -7,7 +7,7 @@ import ServicesPage from "./pages/ServicesPage";
 import PartnerPage from "./pages/PartnerPage";
 import CareersPage from "./pages/CareersPage";
 import ContactPage from "./pages/ContactPage";
-
+import AdminPage from "./pages/AdminPage";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import PageLoader from "./components/PageLoader";
@@ -51,7 +51,7 @@ function App() {
             <Route path="/partner" element={<PartnerPage />} />
             <Route path="/careers" element={<CareersPage />} />
             <Route path="/contact" element={<ContactPage />} />
-
+            <Route path="/admin" element={<AdminPage />} />
           </Routes>
           <Footer />
         </RouteLoader>
