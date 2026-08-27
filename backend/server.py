@@ -77,10 +77,12 @@ class InMemoryCollection:
             return None
         else:
             if upsert:
-                # support $setOnInsert
+                # support $setOnInsert and $set
                 new_doc = {}
                 if "$setOnInsert" in update:
                     new_doc.update(update["$setOnInsert"])
+                if "$set" in update:
+                    new_doc.update(update["$set"])
                 # also copy filter fields
                 new_doc.update(filt)
                 self._docs.append(new_doc)
@@ -674,6 +676,7 @@ async def verify_admin(x_admin_key: Optional[str] = None, x_admin_session: Optio
         return
     if x_admin_session and await validate_admin_session(x_admin_session):
         return
+    logger.warning("Admin verification failed. key=%s session=%s", bool(x_admin_key), bool(x_admin_session))
     raise HTTPException(status_code=401, detail="Unauthorized")
 
 
