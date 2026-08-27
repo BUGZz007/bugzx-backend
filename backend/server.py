@@ -102,7 +102,7 @@ SMTP_PASS = os.environ.get("SMTP_PASSWORD", "")
 NOTIFICATION_EMAIL = os.environ.get("NOTIFICATION_EMAIL", "team@bugzx.space")
 ADMIN_SECRET_KEY = os.environ.get("ADMIN_SECRET_KEY", "") or ""
 ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "vishal@bugzx.space").strip().lower()
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "12345678")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "bugzx-admin-2024")
 ADMIN_PASSWORD_SALT = os.environ.get("ADMIN_PASSWORD_SALT", "bugzx-admin-salt")
 ADMIN_SESSION_TTL_SECONDS = int(os.environ.get("ADMIN_SESSION_TTL_SECONDS", "3600"))
 # Normalize: strip surrounding quotes/whitespace in case .env values included them
