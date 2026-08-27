@@ -50,49 +50,7 @@ mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017').strip().str
 mongo_client = AsyncIOMotorClient(mongo_url)
 db = mongo_client[os.environ.get('DB_NAME', 'bugzx_database').strip().strip('"').strip("'")]
 
-# ===== In-memory fallback when MongoDB is unavailable =====
-class InMemoryCollection:
-    def __init__(self):
-        self._docs = []
 
-    async def find_one(self, filt: dict):
-        # simplistic filter support for {"email": value} or {"token": value}
-        for d in self._docs:
-            match = True
-            for k, v in filt.items():
-                if d.get(k) != v:
-                    match = False
-                    break
-            if match:
-                return d
-        return None
-
-    async def update_one(self, filt: dict, update: dict, upsert: bool = False):
-        doc = await self.find_one(filt)
-        if doc:
-            # handle simple $set
-            if "$set" in update:
-                for k, v in update["$set"].items():
-                    doc[k] = v
-            return None
-        else:
-            if upsert:
-                # support $setOnInsert
-                new_doc = {}
-                if "$setOnInsert" in update:
-                    new_doc.update(update["$setOnInsert"])
-                # also copy filter fields
-                new_doc.update(filt)
-                self._docs.append(new_doc)
-                return None
-            return None
-
-class InMemoryDB:
-    def __init__(self):
-        self.admin_users = InMemoryCollection()
-        self.admin_sessions = InMemoryCollection()
-
-IN_MEMORY_DB = None
 
 # ===== EMAIL CONFIG =====
 SMTP_HOST = os.environ.get("SMTP_HOST", "")
@@ -100,15 +58,7 @@ SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
 SMTP_USER = os.environ.get("SMTP_USER", "")
 SMTP_PASS = os.environ.get("SMTP_PASSWORD", "")
 NOTIFICATION_EMAIL = os.environ.get("NOTIFICATION_EMAIL", "team@bugzx.space")
-ADMIN_SECRET_KEY = os.environ.get("ADMIN_SECRET_KEY", "") or ""
-ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "vishal@bugzx.space").strip().lower()
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "12345678")
-ADMIN_PASSWORD_SALT = os.environ.get("ADMIN_PASSWORD_SALT", "bugzx-admin-salt")
-ADMIN_SESSION_TTL_SECONDS = int(os.environ.get("ADMIN_SESSION_TTL_SECONDS", "3600"))
-# Normalize: strip surrounding quotes/whitespace in case .env values included them
-if ADMIN_SECRET_KEY:
-    ADMIN_SECRET_KEY = ADMIN_SECRET_KEY.strip().strip('"').strip("'")
-logger.info("ADMIN_SECRET_KEY loaded: %s chars", len(ADMIN_SECRET_KEY))
+
 # Branding defaults (override in backend/.env)
 COMPANY_LOGO_URL = os.environ.get("COMPANY_LOGO_URL", "https://assets.bugzx.space/logo-light.png")
 BRAND_COLOR = os.environ.get("BRAND_COLOR", "#09090b")
@@ -249,78 +199,7 @@ def _sb_upload_file(file_bytes: bytes, filename: str, content_type: str) -> Opti
 SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "no-reply@bugzx.space")
 BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "")
 
-def hash_password(password: str) -> str:
-    salted = f"{ADMIN_PASSWORD_SALT}{password}"
-    return hashlib.sha256(salted.encode("utf-8")).hexdigest()
 
-async def get_admin_user(email: str) -> Optional[dict]:
-    # If Mongo is unavailable, use in-memory fallback
-    if IN_MEMORY_DB is not None:
-        return await IN_MEMORY_DB.admin_users.find_one({"email": email.lower()})
-    return await db.admin_users.find_one({"email": email.lower()})
-
-async def create_admin_user(email: str, password: str) -> dict:
-    global IN_MEMORY_DB
-    hashed_password = hash_password(password)
-    payload = {
-        "email": email.lower(),
-        "password_hash": hashed_password,
-        "created_at": datetime.now(timezone.utc).isoformat(),
-    }
-    if IN_MEMORY_DB is not None:
-        await IN_MEMORY_DB.admin_users.update_one({"email": email.lower()}, {"$setOnInsert": payload}, upsert=True)
-        return await get_admin_user(email)
-    try:
-        await db.admin_users.update_one({"email": email.lower()}, {"$setOnInsert": payload}, upsert=True)
-        return await get_admin_user(email)
-    except Exception as e:
-        logger.warning("Mongo write failed for admin_users, using in-memory fallback: %s", e)
-        # initialize in-memory db if not present
-        if IN_MEMORY_DB is None:
-            IN_MEMORY_DB = InMemoryDB()
-        await IN_MEMORY_DB.admin_users.update_one({"email": email.lower()}, {"$setOnInsert": payload}, upsert=True)
-        return await get_admin_user(email)
-
-async def validate_admin_credentials(email: str, password: str) -> bool:
-    user = await get_admin_user(email)
-    if not user:
-        return False
-    return user.get("password_hash") == hash_password(password)
-
-async def create_admin_session(email: str) -> str:
-    token = uuid.uuid4().hex
-    expires_at = datetime.now(timezone.utc) + timedelta(seconds=ADMIN_SESSION_TTL_SECONDS)
-    if IN_MEMORY_DB is not None:
-        await IN_MEMORY_DB.admin_sessions.update_one(
-            {"email": email.lower()},
-            {"$set": {"token": token, "expires_at": expires_at.isoformat()}},
-            upsert=True,
-        )
-    else:
-        await db.admin_sessions.update_one(
-            {"email": email.lower()},
-            {"$set": {"token": token, "expires_at": expires_at.isoformat()}},
-            upsert=True,
-        )
-    return token
-
-async def validate_admin_session(token: str) -> bool:
-    if IN_MEMORY_DB is not None:
-        session = await IN_MEMORY_DB.admin_sessions.find_one({"token": token})
-    else:
-        session = await db.admin_sessions.find_one({"token": token})
-    if not session:
-        return False
-    expires_at = session.get("expires_at")
-    if not expires_at:
-        return False
-    if isinstance(expires_at, str):
-        expires_at = datetime.fromisoformat(expires_at)
-    return expires_at > datetime.now(timezone.utc)
-
-async def ensure_admin_user_exists():
-    if ADMIN_EMAIL and ADMIN_PASSWORD:
-        await create_admin_user(ADMIN_EMAIL, ADMIN_PASSWORD)
 
 
 def send_email_via_brevo(to: str, subject: str, html: str) -> bool:
@@ -666,60 +545,7 @@ async def universal_submit(
     }
 
 
-# ---- Admin Routes ----
 
-async def verify_admin(x_admin_key: Optional[str] = None, x_admin_session: Optional[str] = None):
-    # Legacy secret key check
-    if ADMIN_SECRET_KEY and x_admin_key and x_admin_key == ADMIN_SECRET_KEY:
-        return
-    if x_admin_session and await validate_admin_session(x_admin_session):
-        return
-    raise HTTPException(status_code=401, detail="Unauthorized")
-
-
-@api_router.get("/submissions")
-async def get_submissions(x_admin_key: str = Header(None), x_admin_session: str = Header(None)):
-    await verify_admin(x_admin_key, x_admin_session)
-    if not SUPABASE_READY:
-        raise HTTPException(status_code=503, detail="Supabase not configured")
-    data = await asyncio.to_thread(_sb_get_all)
-    return data
-
-
-@api_router.patch("/submissions/{submission_id}")
-async def patch_submission(
-    submission_id: str,
-    body: SubmissionPatch,
-    x_admin_key: str = Header(None),
-    x_admin_session: str = Header(None),
-):
-    await verify_admin(x_admin_key, x_admin_session)
-    if not SUPABASE_READY:
-        raise HTTPException(status_code=503, detail="Supabase not configured")
-    updates = {k: v for k, v in body.model_dump().items() if v is not None}
-    if not updates:
-        raise HTTPException(status_code=422, detail="No fields to update")
-    ok = await asyncio.to_thread(_sb_update, submission_id, updates)
-    if not ok:
-        raise HTTPException(status_code=500, detail="Update failed")
-    return {"ok": True, "updated": submission_id}
-
-
-class LoginRequest(BaseModel):
-    email: str
-    password: str
-
-
-@api_router.post("/admin/login")
-async def admin_login(body: LoginRequest):
-    email = body.email.strip().lower()
-    password = body.password
-    if not email or not password:
-        raise HTTPException(status_code=422, detail="Email and password are required")
-    if not await validate_admin_credentials(email, password):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    token = await create_admin_session(email)
-    return {"ok": True, "token": token}
 
 
 # ---- Legacy Routes ----
@@ -796,11 +622,7 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup():
-    global IN_MEMORY_DB
-    # Use in-memory DB fallback to avoid startup blocking on missing MongoDB
-    IN_MEMORY_DB = InMemoryDB()
-    logger.warning("Using in-memory MongoDB fallback for admin users/sessions.")
-    await ensure_admin_user_exists()
+    pass
 
 @app.on_event("shutdown")
 async def shutdown():
