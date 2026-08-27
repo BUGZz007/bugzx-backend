@@ -29,6 +29,7 @@ const TYPE_COLORS = {
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
+  const [emailInput, setEmailInput] = useState("");
   const [pwInput, setPwInput] = useState("");
   const [pwError, setPwError] = useState("");
 
@@ -41,13 +42,27 @@ export default function AdminPage() {
   const [editMap, setEditMap] = useState({}); // { submission_id: { status, notes } }
   const [saving, setSaving] = useState(null);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (pwInput === ADMIN_PASSWORD) {
-      setAuthed(true);
-      setPwError("");
-    } else {
-      setPwError("Incorrect password. Please try again.");
+    setLoading(true);
+    setPwError("");
+    try {
+      const res = await fetch(`${BACKEND}/api/admin/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailInput, password: pwInput }),
+      });
+      const data = await res.json();
+      if (data.ok && data.token) {
+        localStorage.setItem("admin_token", data.token);
+        setAuthed(true);
+      } else {
+        throw new Error(data.detail || "Authentication failed");
+      }
+    } catch (err) {
+      setPwError(err.message || "Incorrect credentials. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -55,7 +70,7 @@ export default function AdminPage() {
     setLoading(true);
     try {
       const res = await fetch(`${BACKEND}/api/submissions`, {
-        headers: { "x-admin-key": process.env.REACT_APP_ADMIN_SECRET_KEY || "" },
+        headers: { "x-admin-session": localStorage.getItem("admin_token") || "" },
       });
       if (!res.ok) throw new Error("Unauthorized or server error");
       const data = await res.json();
@@ -80,7 +95,7 @@ export default function AdminPage() {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-key": process.env.REACT_APP_ADMIN_SECRET_KEY || "",
+          "x-admin-session": localStorage.getItem("admin_token") || "",
         },
         body: JSON.stringify(edits),
       });
@@ -130,22 +145,37 @@ export default function AdminPage() {
             <h1 className="font-orbitron font-black text-2xl">BUGZ X Admin</h1>
             <p className="text-black/50 text-sm mt-1">Internal ERP — Authorized Access Only</p>
           </div>
-          <form onSubmit={handleLogin} className="rounded-2xl border border-black/12 bg-white p-6 shadow-[0_10px_40px_rgba(0,0,0,0.06)]">
-            <label className="text-[10px] tracking-[0.25em] text-black/60 font-semibold">ADMIN PASSWORD</label>
-            <input
-              type="password"
-              value={pwInput}
-              onChange={(e) => setPwInput(e.target.value)}
-              placeholder="Enter admin password"
-              className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3 text-sm focus:outline-none focus:border-black transition-colors"
-              autoFocus
-            />
-            {pwError && <p className="mt-2 text-red-500 text-xs">{pwError}</p>}
+          <form onSubmit={handleLogin} className="rounded-2xl border border-black/12 bg-white p-6 shadow-[0_10px_40px_rgba(0,0,0,0.06)] flex flex-col gap-4">
+            <div>
+              <label className="text-[10px] tracking-[0.25em] text-black/60 font-semibold">ADMIN EMAIL</label>
+              <input
+                type="email"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                placeholder="Enter admin email"
+                className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3 text-sm focus:outline-none focus:border-black transition-colors"
+                required
+                autoFocus
+              />
+            </div>
+            <div>
+              <label className="text-[10px] tracking-[0.25em] text-black/60 font-semibold">ADMIN PASSWORD</label>
+              <input
+                type="password"
+                value={pwInput}
+                onChange={(e) => setPwInput(e.target.value)}
+                placeholder="Enter admin password"
+                className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3 text-sm focus:outline-none focus:border-black transition-colors"
+                required
+              />
+            </div>
+            {pwError && <p className="text-red-500 text-xs">{pwError}</p>}
             <button
               type="submit"
-              className="mt-4 w-full rounded-full bg-black text-white px-6 py-3 text-[12px] font-bold tracking-[0.15em] hover:bg-black/85 transition-colors"
+              disabled={loading}
+              className="mt-2 w-full rounded-full bg-black text-white px-6 py-3 text-[12px] font-bold tracking-[0.15em] hover:bg-black/85 transition-colors disabled:opacity-50"
             >
-              ENTER ADMIN PANEL
+              {loading ? "AUTHENTICATING..." : "ENTER ADMIN PANEL"}
             </button>
           </form>
         </section>
