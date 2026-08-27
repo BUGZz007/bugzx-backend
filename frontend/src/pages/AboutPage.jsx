@@ -94,28 +94,42 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Team */}
-      <section className="bg-[#fafafa] border-y border-black/10">
-        <div className="max-w-6xl mx-auto px-4 md:px-6 py-20">
-          <div className="flex items-center gap-3 text-[11px] tracking-[0.25em] font-semibold">
-            <span className="h-px w-8 bg-black" /> TEAM
-          </div>
-          <h2 className="mt-4 font-orbitron font-black text-3xl md:text-5xl leading-tight max-w-3xl">
-            The people behind <span className="italic font-normal text-black/60">your growth system</span>
-          </h2>
+      {/* Team / Leadership */}
+      <section className="bg-white border-y border-black/10 relative overflow-hidden">
+        {/* World Map Background */}
+        <div 
+          className="absolute inset-0 bg-center bg-no-repeat opacity-60 pointer-events-none"
+          style={{ 
+            backgroundImage: "url('/world-map.jpg')",
+            backgroundSize: "contain"
+          }}
+        />
 
-          <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="relative max-w-6xl mx-auto px-4 md:px-6 py-20 z-10">
+          <div className="text-center mb-16">
+            <h2 className="font-orbitron font-black text-3xl md:text-5xl leading-tight uppercase tracking-wide">
+              LEADERSHIP
+            </h2>
+          </div>
+
+          <div className="flex flex-wrap gap-16 md:gap-28 items-start justify-center max-w-5xl mx-auto">
             {TEAM.map((t) => (
-              <div key={t.name} className="rounded-2xl border border-black/12 bg-white p-6 md:p-8">
-                <p className="text-[10px] tracking-[0.25em] text-black/50 font-semibold">{t.role.toUpperCase()}</p>
-                <p className="mt-3 font-orbitron font-black text-2xl md:text-3xl">{t.name}</p>
-                <p className="mt-3 text-sm text-black/60 leading-relaxed">{t.desc}</p>
-                <div className="mt-5 flex flex-wrap gap-2">
-                  {t.tags.map((tag) => (
-                    <span key={tag} className="inline-flex items-center gap-1.5 rounded-full border border-black/15 px-3 py-1 text-[11px] font-semibold">
-                      <Diamond className="h-3 w-3" /> {tag}
-                    </span>
-                  ))}
+              <div key={t.name} className="flex flex-col items-center text-center w-full max-w-[280px]">
+                <div className="w-full aspect-[4/3] overflow-hidden flex items-end justify-center">
+                  <img 
+                    src={t.image} 
+                    alt={t.name} 
+                    className="w-full h-full object-contain translate-y-[14px] grayscale hover:grayscale-0 transition-all duration-300"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.parentNode.innerHTML = `<div class="text-4xl font-orbitron font-black text-black/20">${t.name.split(' ').map(n => n[0]).join('')}</div>`;
+                    }}
+                  />
+                </div>
+                <div className="w-full border-t border-black/60 pt-4">
+                  <h3 className="font-orbitron font-black text-xl md:text-2xl tracking-tight">{t.name}</h3>
+                  <p className="text-[11px] tracking-[0.15em] font-bold text-black/80 mt-1 uppercase">{t.role}</p>
+                  <p className="mt-3 text-xs md:text-sm text-black/60 leading-relaxed max-w-[285px] mx-auto">{t.desc}</p>
                 </div>
               </div>
             ))}

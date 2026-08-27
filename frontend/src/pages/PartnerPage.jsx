@@ -21,7 +21,7 @@ export default function PartnerPage() {
         <h1 className="mt-4 font-orbitron font-black text-4xl md:text-6xl lg:text-7xl leading-[0.95] tracking-tight">
           Proof is clearer when every metric
           <br />
-          <span className="italic font-normal text-black/60">connects to the system behind it.</span>
+          <span className="not-italic font-normal text-black/60">connects to the system behind it.</span>
         </h1>
         <p className="mt-6 max-w-2xl text-sm md:text-base text-black/65 leading-relaxed">
           BUGZ X brings acquisition, automation, analytics, and conversion decisions into one visible operating rhythm.
@@ -76,7 +76,7 @@ export default function PartnerPage() {
             <span className="h-px w-8 bg-black" /> CLIENT PORTFOLIO
           </div>
           <h2 className="mt-4 font-orbitron font-black text-3xl md:text-5xl leading-tight max-w-3xl">
-            Global partnerships driving <span className="italic font-normal text-black/60">real execution</span>
+            Global partnerships driving <span className="not-italic font-normal text-black/60">real execution</span>
           </h2>
 
           <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -113,7 +113,7 @@ export default function PartnerPage() {
           <span className="h-px w-8 bg-black" /> GLOBAL FOOTPRINT
         </div>
         <h2 className="mt-4 font-orbitron font-black text-3xl md:text-5xl leading-tight max-w-3xl">
-          Trusted by businesses <span className="italic font-normal text-black/60">worldwide</span>
+          Trusted by businesses <span className="not-italic font-normal text-black/60">worldwide</span>
         </h2>
         <p className="mt-4 max-w-2xl text-sm md:text-base text-black/65">
           Delivering innovative technology, branding, ERP, travel tech, and digital transformation solutions across India, Qatar, Guyana, and the Caribbean.
@@ -147,7 +147,7 @@ export default function PartnerPage() {
             <span className="h-px w-8 bg-black" /> CLIENT FEEDBACK
           </div>
           <h2 className="mt-4 font-orbitron font-black text-3xl md:text-5xl leading-tight max-w-3xl">
-            What our partners <span className="italic font-normal text-black/60">say about BUGZ X</span>
+            What our partners <span className="not-italic font-normal text-black/60">say about BUGZ X</span>
           </h2>
 
           <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

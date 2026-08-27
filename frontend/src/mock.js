@@ -89,8 +89,20 @@ export const INTERN_ROLES = [
 ];
 
 export const TEAM = [
-  { name: "Vishal Suthar", role: "Founder", desc: "Leads growth strategy, automation design, business analysis, and conversion-focused systems for client execution.", tags: ["Growth Strategy", "AI Automation", "Conversion Systems"] },
-  { name: "Suvodip Majumder", role: "Co-Founder", desc: "Supports performance execution, lead-generation systems, content operations, campaign learning loops, and reporting workflows.", tags: ["Performance Marketing", "Lead Generation", "Campaign Ops"] },
+  { 
+    name: "Vishal Suthar", 
+    role: "Founder & Technology Specialist", 
+    desc: "Expert in technology solutions, system architecture, and delivering innovative business solutions.", 
+    image: "/vishal.png",
+    tags: ["Technology Solutions", "System Architecture", "Business Solutions"] 
+  },
+  { 
+    name: "Chirag Mewada", 
+    role: "Co-Founder & Brand Designer", 
+    desc: "Specializing in brand identity, logo design, positioning strategy, and visual systems that drive long-term business growth.", 
+    image: "/chirag.png",
+    tags: ["Brand Identity", "Logo Design", "Brand Strategy"] 
+  }
 ];
 
 export const SERVICE_OPTIONS = [
@@ -103,6 +115,29 @@ export const SERVICE_OPTIONS = [
   "Website and Funnels",
   "CRM and Automation",
   "Complete Growth Partnership",
+];
+
+export const FORM_TYPES = [
+  "Inquiry",
+  "Job Application",
+  "Business Partnership",
+  "Support Request",
+];
+
+export const COUNTRIES = [
+  "Afghanistan", "Albania", "Algeria", "Argentina", "Australia", "Austria",
+  "Bahrain", "Bangladesh", "Belgium", "Brazil", "Canada", "Chile", "China",
+  "Colombia", "Croatia", "Czech Republic", "Denmark", "Egypt", "Ethiopia",
+  "Finland", "France", "Germany", "Ghana", "Greece", "Guyana", "Hong Kong",
+  "Hungary", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel",
+  "Italy", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kuwait", "Lebanon",
+  "Libya", "Malaysia", "Mexico", "Morocco", "Netherlands", "New Zealand",
+  "Nigeria", "Norway", "Oman", "Pakistan", "Peru", "Philippines", "Poland",
+  "Portugal", "Qatar", "Romania", "Russia", "Saudi Arabia", "Senegal",
+  "Singapore", "South Africa", "South Korea", "Spain", "Sri Lanka", "Sudan",
+  "Sweden", "Switzerland", "Taiwan", "Tanzania", "Thailand", "Tunisia",
+  "Turkey", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom",
+  "United States", "Vietnam", "Yemen", "Zimbabwe",
 ];
 
 export const FAQS = [

@@ -11,7 +11,7 @@ export default function PageLoader({ visible }) {
     >
       <div className="flex items-center gap-3">
         <div className="animate-floaty">
-          <BugLogo className="h-12 w-12 md:h-14 md:w-14" />
+          <BugLogo className="h-16 w-16 md:h-20 md:w-20" />
         </div>
         <span className="font-orbitron font-black text-3xl md:text-4xl tracking-tight">BUGz X</span>
       </div>

@@ -5,8 +5,8 @@ import { NAV_LINKS } from "../mock";
 import BugLogo from "./BugLogo";
 
 const BugzLogo = ({ className = "", size = "md" }) => {
-  const iconSize = size === "lg" ? "h-12 w-12 md:h-16 md:w-16" : "h-6 w-6";
-  const textSize = size === "lg" ? "!text-4xl md:!text-6xl" : "text-[20px] md:text-[22px]";
+  const iconSize = size === "lg" ? "h-12 w-12 md:h-16 md:w-16" : "h-7 w-7 md:h-8 md:w-8";
+  const textSize = size === "lg" ? "!text-4xl md:!text-6xl" : "text-[22px] md:text-[24px]";
   return (
     <span className={`inline-flex items-center gap-2 font-orbitron font-black tracking-tight leading-none ${className}`}>
       <BugLogo className={iconSize} />

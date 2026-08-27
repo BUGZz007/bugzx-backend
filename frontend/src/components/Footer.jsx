@@ -21,7 +21,7 @@ export default function Footer() {
                 {[
                   { icon: Linkedin, href: "#", label: "LinkedIn" },
                   { icon: Instagram, href: "#", label: "Instagram" },
-                  { icon: Mail, href: "mailto:hello@bugzx.space", label: "Email" },
+                  { icon: Mail, href: "mailto:team@bugzx.space", label: "Email" },
                 ].map((s, i) => (
                   <a key={i} href={s.href} aria-label={s.label} className="h-9 w-9 rounded-full border border-black/15 flex items-center justify-center hover:bg-black hover:text-white transition-colors">
                     <s.icon className="h-4 w-4" />
@@ -52,13 +52,21 @@ export default function Footer() {
           <div className="md:col-span-3">
             <p className="text-[11px] tracking-[0.25em] text-black/50 font-semibold">CONTACT</p>
             <ul className="mt-4 space-y-2 text-sm text-black/75">
-              <li>hello@bugzx.space</li>
+              <li>team@bugzx.space</li>
               <li>Mon–Fri, 10:00 – 19:00</li>
               <li>Remote-first, Global</li>
             </ul>
             <Link to="/contact" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold border-b border-black pb-0.5 hover:gap-3 transition-all">
               Start a project <ArrowUpRight className="h-4 w-4" />
             </Link>
+
+            <div className="mt-6">
+              <img
+                src="/cyber-beetle.png"
+                alt="BUGZ X Cyber Beetle"
+                className="w-full max-w-[260px] md:max-w-[320px] h-auto object-contain pointer-events-none select-none opacity-90 hover:opacity-100 transition-opacity"
+              />
+            </div>
           </div>
         </div>
 
